@@ -10,6 +10,8 @@
       --pink:#ff4da6;
       --pink2:#ff77c8;
       --white:#fff;
+      --glass: rgba(255,255,255,.08);
+      --border: rgba(255,255,255,.16);
     }
     *{box-sizing:border-box}
     html,body{height:100%; margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;}
@@ -30,6 +32,7 @@
                   #000;
       transition: opacity 900ms ease;
       opacity:1;
+      z-index: 10;
     }
     .stage.fade-out{ opacity:0; pointer-events:none; }
 
@@ -74,6 +77,7 @@
       pointer-events:none;
       opacity:0;
       transition: opacity 900ms ease;
+      z-index: 4;
     }
     .rain.show{ opacity:1; }
 
@@ -93,21 +97,12 @@
       color: var(--clr);
       filter: drop-shadow(0 0 10px rgba(255,77,166,.35));
     }
-    .drop .emoji{
-      margin-left:.35em;
-      opacity:.95;
-    }
+    .drop .emoji{ margin-left:.35em; opacity:.95; }
 
     @keyframes fall{
-      0%{
-        transform: translate3d(var(--x), -18vh, 0) rotate(var(--rot));
-        opacity: 0;
-      }
+      0%{ transform: translate3d(var(--x), -18vh, 0) rotate(var(--rot)); opacity: 0; }
       6%{ opacity: .95; }
-      100%{
-        transform: translate3d(var(--x), 112vh, 0) rotate(calc(var(--rot) * -1));
-        opacity: 0.05;
-      }
+      100%{ transform: translate3d(var(--x), 112vh, 0) rotate(calc(var(--rot) * -1)); opacity: 0.05; }
     }
 
     /* subtle stars */
@@ -116,6 +111,246 @@
       inset:0;
       opacity:.55;
       mix-blend-mode: screen;
+      z-index: 1;
+    }
+
+    /* CTA appears after 5s of rain */
+    .cta-wrap{
+      position: fixed;
+      left: 0; right: 0; bottom: 20px;
+      display: grid;
+      place-items: center;
+      pointer-events: none;
+      z-index: 20;
+    }
+    .cta{
+      pointer-events: auto;
+      opacity: 0;
+      transform: translateY(14px);
+      transition: opacity 600ms ease, transform 600ms ease;
+      border: 1px solid rgba(255,255,255,.16);
+      background: linear-gradient(135deg, rgba(255,77,166,.9), rgba(255,119,200,.75));
+      color: #fff;
+      padding: 12px 16px;
+      border-radius: 999px;
+      font-weight: 900;
+      letter-spacing: .2px;
+      cursor: pointer;
+      box-shadow: 0 10px 34px rgba(255,77,166,.22);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .cta.show{ opacity: 1; transform: translateY(0); }
+
+    /* ===== Lixi pick screen ===== */
+    .lixi-screen{
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      z-index: 25;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 500ms ease;
+      background:
+        radial-gradient(900px 520px at 50% 35%, rgba(255,42,109,.16), transparent 62%),
+        radial-gradient(900px 520px at 50% 75%, rgba(195,0,63,.13), transparent 62%),
+        rgba(0,0,0,.35);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+    .lixi-screen.show{ opacity: 1; pointer-events: auto; }
+
+    .panel{
+      width: min(820px, 92vw);
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
+      border-radius: 22px;
+      padding: 18px 16px 16px;
+      box-shadow: 0 24px 70px rgba(0,0,0,.45);
+    }
+    .panel h2{ margin: 0; font-size: 20px; letter-spacing: .2px; }
+    .panel p{ margin: 8px 0 14px; opacity: .9; line-height: 1.35; font-size: 14px; }
+
+    .lixi-grid{
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      margin-top: 10px;
+    }
+    @media (max-width: 640px){
+      .lixi-grid{ grid-template-columns: repeat(3, 1fr); }
+    }
+    .lixi-btn{
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.06);
+      border-radius: 16px;
+      padding: 10px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform 220ms ease, opacity 220ms ease, filter 220ms ease;
+    }
+    .lixi-btn:hover{ transform: translateY(-2px); }
+    .lixi-btn:active{ transform: translateY(0) scale(.99); }
+    .lixi-img{
+      width: 100%;
+      aspect-ratio: 3 / 4;
+      object-fit: cover;
+      border-radius: 12px;
+      display:block;
+      filter: drop-shadow(0 10px 24px rgba(0,0,0,.35));
+    }
+    .lixi-btn.dim{ opacity: .35; filter: grayscale(.2); }
+
+    /* ===== Countdown overlay (full black) ===== */
+    .countdown-overlay{
+      position: fixed;
+      inset: 0;
+      z-index: 40;
+      background: #000;
+      display: grid;
+      place-items: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 180ms ease;
+    }
+    .countdown-overlay.show{
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .countdown-text{
+      text-align: center;
+      font-weight: 1000;
+      letter-spacing: .6px;
+      line-height: 1.05;
+      text-shadow: 0 0 22px rgba(255,77,166,.25);
+      padding: 0 14px;
+    }
+    .countdown-text .line1{
+      font-size: clamp(22px, 5vw, 40px);
+      opacity: .92;
+    }
+    .countdown-text .num{
+      margin-top: 10px;
+      font-size: clamp(64px, 16vw, 140px);
+      color: #fff;
+    }
+    .countdown-text .boom{
+      margin-top: 10px;
+      font-size: clamp(34px, 10vw, 84px);
+      background: linear-gradient(135deg, #ff4da6, #ff77c8);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    /* ===== Wish screen ===== */
+    .wish-screen{
+      position: fixed;
+      inset: 0;
+      z-index: 45;
+      display: grid;
+      place-items: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 420ms ease;
+      background:
+        radial-gradient(1000px 620px at 50% 40%, rgba(255,77,166,.14), transparent 62%),
+        radial-gradient(900px 520px at 50% 75%, rgba(255,119,200,.10), transparent 62%),
+        rgba(0,0,0,.55);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+    .wish-screen.show{ opacity: 1; pointer-events: auto; }
+
+    .wish-card{
+      width: min(760px, 92vw);
+      border: 1px solid rgba(255,255,255,.16);
+      background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.06));
+      border-radius: 22px;
+      padding: 18px 16px 16px;
+      box-shadow: 0 24px 70px rgba(0,0,0,.45);
+    }
+    .wish-title{
+      font-weight: 950;
+      font-size: 18px;
+      margin: 0 0 10px;
+    }
+    .wish-box{
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.18);
+      border-radius: 18px;
+      padding: 14px 14px 12px;
+    }
+    .money{
+      font-size: 28px;
+      font-weight: 1000;
+      letter-spacing: .4px;
+    }
+    .wish-text{
+      margin-top: 8px;
+      font-size: 16px;
+      font-weight: 750;
+      line-height: 1.45;
+      opacity: .94;
+    }
+    .note{
+      margin-top: 8px;
+      opacity: .86;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .only-btn{
+      margin-top: 14px;
+      width: 100%;
+      border: 1px solid rgba(255,255,255,.16);
+      background: linear-gradient(135deg, rgba(255,77,166,.88), rgba(255,119,200,.75));
+      color: #fff;
+      padding: 12px 14px;
+      border-radius: 999px;
+      font-weight: 1000;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      box-shadow: 0 14px 40px rgba(255,77,166,.18);
+    }
+
+    /* ===== Final screen ===== */
+    .final-screen{
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: grid;
+      place-items: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 520ms ease;
+      background:
+        radial-gradient(1000px 620px at 50% 40%, rgba(255,77,166,.18), transparent 62%),
+        radial-gradient(900px 520px at 50% 75%, rgba(255,119,200,.12), transparent 62%),
+        #000;
+    }
+    .final-screen.show{ opacity: 1; pointer-events: auto; }
+
+    .final-wrap{
+      text-align:center;
+      padding: 0 16px;
+    }
+    .final-text{
+      font-weight: 1100;
+      font-size: clamp(26px, 7vw, 54px);
+      letter-spacing: .3px;
+      margin-bottom: 18px;
+      text-shadow: 0 0 22px rgba(255,77,166,.22);
+    }
+    .big-heart{
+      width: min(340px, 70vw);
+      aspect-ratio: 1/1;
+      filter: drop-shadow(0 0 26px rgba(255,77,166,.45));
+    }
+
+    /* reduce motion */
+    @media (prefers-reduced-motion: reduce){
+      .heart{ animation: none; }
+      .drop{ animation-duration: 6s !important; }
     }
   </style>
 </head>
@@ -124,7 +359,6 @@
 
   <div class="stage" id="stage">
     <button class="heart-btn" id="heartBtn" aria-label="Bấm để bắt đầu">
-      <!-- SVG heart -->
       <svg class="heart" viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <path d="M12 21s-7.2-4.4-9.6-8.7C.6 9.3 2.2 5.8 5.7 5.1c1.8-.4 3.6.3 4.7 1.6 1.1-1.3 2.9-2 4.7-1.6 3.5.7 5.1 4.2 3.3 7.2C19.2 16.6 12 21 12 21z"
               fill="url(#g)"/>
@@ -140,6 +374,58 @@
   </div>
 
   <div class="rain" id="rain"></div>
+
+  <div class="cta-wrap">
+    <button class="cta" id="toLixiBtn">Bốc lì xì đầu năm không? 🧧</button>
+  </div>
+
+  <!-- Pick screen -->
+  <div class="lixi-screen" id="lixiScreen" aria-hidden="true">
+    <div class="panel">
+      <h2>🧧 Chọn 1 bao lì xì</h2>
+      <p>Chạm vào một bao bất kỳ nha… rồi nhắm mắt chờ “bùm” 💗</p>
+      <div class="lixi-grid" id="lixiGrid"></div>
+    </div>
+  </div>
+
+  <!-- Countdown overlay -->
+  <div class="countdown-overlay" id="countOverlay" aria-hidden="true">
+    <div class="countdown-text">
+      <div class="line1" id="cdLine">Chuẩn bị mở…</div>
+      <div class="num" id="cdNum">3</div>
+      <div class="boom" id="cdBoom" style="display:none;">BÙM! ✨</div>
+    </div>
+  </div>
+
+  <!-- Wish screen -->
+  <div class="wish-screen" id="wishScreen" aria-hidden="true">
+    <div class="wish-card">
+      <div class="wish-title">🎉 Lì xì của em</div>
+      <div class="wish-box">
+        <div class="money" id="moneyText"></div>
+        <div class="wish-text" id="wishText"></div>
+        <div class="note" id="noteText"></div>
+      </div>
+      <button class="only-btn" id="continueBtn">Tiếp tục 💖</button>
+    </div>
+  </div>
+
+  <!-- Final screen -->
+  <div class="final-screen" id="finalScreen" aria-hidden="true">
+    <div class="final-wrap">
+      <div class="final-text">Cảm ơn em — Yêu em ❤️</div>
+      <svg class="big-heart" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M12 21s-7.2-4.4-9.6-8.7C.6 9.3 2.2 5.8 5.7 5.1c1.8-.4 3.6.3 4.7 1.6 1.1-1.3 2.9-2 4.7-1.6 3.5.7 5.1 4.2 3.3 7.2C19.2 16.6 12 21 12 21z"
+              fill="url(#gg)"/>
+        <defs>
+          <linearGradient id="gg" x1="3" y1="4" x2="20" y2="22" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#ff4da6"/>
+            <stop offset="1" stop-color="#ff77c8"/>
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
+  </div>
 
   <script>
     // ====== CONFIG ======
@@ -168,29 +454,59 @@
     const EMOJIS = ["💖","✨","💗","💕","🌸","🥰","💞","💘","🌟","❤️"];
     const COLORS = ["#ff4da6","#ff77c8","#ffffff","#ffd1ea","#ffb3dc","#ffe0f1"];
 
-    // spawn rate
-    const START_RATE_MS = 140;   // càng nhỏ càng dày
-    const BURST_COUNT = 18;      // đợt mưa ban đầu
-    const MAX_DROPS = 160;       // giới hạn để máy yếu không lag
+    const START_RATE_MS = 140;
+    const BURST_COUNT = 18;
+    const MAX_DROPS = 160;
 
-    // ====== STATE ======
+    // ====== LIXI CONFIG ======
+    const LIXI_IMAGES = ["lixi1.png","lixi2.png","lixi3.png","lixi4.png","lixi5.png"];
+    const MONEY_LIST = ["68.688đ", "88.888đ", "131.452đ", "199.999đ", "520.000đ"];
+    const NEWYEAR_WISHES = [
+      "Chúc em một năm mới bình an, rực rỡ và luôn hay cười 🌸",
+      "Chúc em luôn được yêu thương thật nhiều, theo cách em xứng đáng 💗",
+      "Chúc em mọi điều tốt lành sẽ tìm đến, còn anh thì luôn tìm đến em 🥰",
+      "Chúc em năm mới gặp toàn chuyện vui, và anh được ở cạnh chia sẻ hết 💞",
+      "Chúc em mạnh khỏe, hạnh phúc, và mỗi ngày đều thấy mình đáng yêu ✨"
+    ];
+    const FIXED_NOTE = "Bao lì xì này nhỏ thôi… nhưng anh nghiêm túc về chuyện thương em ❤️";
+
+    // ====== STATE / DOM ======
     const stage = document.getElementById("stage");
     const rain = document.getElementById("rain");
     const heartBtn = document.getElementById("heartBtn");
 
+    const toLixiBtn = document.getElementById("toLixiBtn");
+
+    const lixiScreen = document.getElementById("lixiScreen");
+    const lixiGrid = document.getElementById("lixiGrid");
+
+    const countOverlay = document.getElementById("countOverlay");
+    const cdLine = document.getElementById("cdLine");
+    const cdNum = document.getElementById("cdNum");
+    const cdBoom = document.getElementById("cdBoom");
+
+    const wishScreen = document.getElementById("wishScreen");
+    const moneyText = document.getElementById("moneyText");
+    const wishText = document.getElementById("wishText");
+    const noteText = document.getElementById("noteText");
+    const continueBtn = document.getElementById("continueBtn");
+
+    const finalScreen = document.getElementById("finalScreen");
+
     let started = false;
     let timer = null;
+    let ctaTimeout = null;
+    let locked = false; // prevent multi clicks
+    let picked = false;
 
     function rand(min, max){ return Math.random() * (max - min) + min; }
     function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 
+    // ====== RAIN ======
     function createDrop(){
-      // keep DOM light
       if (rain.childElementCount > MAX_DROPS) {
-        // remove oldest a bit
         for (let i = 0; i < 10 && rain.firstChild; i++) rain.removeChild(rain.firstChild);
       }
-
       const el = document.createElement("div");
       el.className = "drop";
 
@@ -211,10 +527,7 @@
       el.style.setProperty("--clr", clr);
 
       rain.appendChild(el);
-
-      el.addEventListener("animationend", () => {
-        el.remove();
-      });
+      el.addEventListener("animationend", () => el.remove());
     }
 
     function burst(n=12){
@@ -227,19 +540,131 @@
       rain.classList.add("show");
       burst(BURST_COUNT);
       timer = setInterval(createDrop, START_RATE_MS);
+
+      // show CTA after 5 seconds
+      ctaTimeout = setTimeout(() => {
+        toLixiBtn.classList.add("show");
+      }, 5000);
     }
 
+    // ====== LIXI SCREEN ======
+    function buildLixiGrid(){
+      lixiGrid.innerHTML = "";
+      LIXI_IMAGES.forEach((src, idx) => {
+        const btn = document.createElement("button");
+        btn.className = "lixi-btn";
+        btn.type = "button";
+        btn.setAttribute("aria-label", "Chọn bao lì xì " + (idx+1));
+
+        const img = document.createElement("img");
+        img.className = "lixi-img";
+        img.src = src;
+        img.alt = "Lì xì " + (idx+1);
+
+        btn.appendChild(img);
+        btn.addEventListener("click", () => pickLixi(idx));
+        lixiGrid.appendChild(btn);
+      });
+    }
+
+    function openLixiScreen(){
+      toLixiBtn.classList.remove("show");
+      lixiScreen.classList.add("show");
+      lixiScreen.setAttribute("aria-hidden", "false");
+      buildLixiGrid();
+      picked = false;
+      locked = false;
+    }
+
+    function pickLixi(idx){
+      if (locked || picked) return;
+      locked = true;
+      picked = true;
+
+      // dim others for drama
+      [...lixiGrid.children].forEach((el, i) => {
+        if (i !== idx) el.classList.add("dim");
+      });
+
+      // show black countdown overlay above everything
+      runCountdownThenReveal();
+    }
+
+    function runCountdownThenReveal(){
+      // hide pick screen smoothly
+      lixiScreen.classList.remove("show");
+      lixiScreen.setAttribute("aria-hidden", "true");
+
+      // optional: pause rain spawn for smoothness
+      if (timer) { clearInterval(timer); timer = null; }
+      if (ctaTimeout) { clearTimeout(ctaTimeout); ctaTimeout = null; }
+
+      // show overlay
+      countOverlay.classList.add("show");
+      countOverlay.setAttribute("aria-hidden", "false");
+
+      cdLine.textContent = "Chuẩn bị mở…";
+      cdBoom.style.display = "none";
+      cdNum.style.display = "block";
+
+      let t = 3;
+      cdNum.textContent = String(t);
+
+      const tick = setInterval(() => {
+        t--;
+        if (t >= 1){
+          cdNum.textContent = String(t);
+        } else {
+          clearInterval(tick);
+          // show "BÙM" briefly
+          cdNum.style.display = "none";
+          cdBoom.style.display = "block";
+          cdBoom.textContent = "BÙM! ✨";
+
+          setTimeout(() => {
+            countOverlay.classList.remove("show");
+            countOverlay.setAttribute("aria-hidden", "true");
+            showWishScreen();
+          }, 520);
+        }
+      }, 850);
+    }
+
+    function showWishScreen(){
+      // fill wish
+      moneyText.textContent = "🎉 " + pick(MONEY_LIST);
+      wishText.textContent = pick(NEWYEAR_WISHES);
+      noteText.textContent = FIXED_NOTE;
+
+      wishScreen.classList.add("show");
+      wishScreen.setAttribute("aria-hidden", "false");
+    }
+
+    function goFinal(){
+      wishScreen.classList.remove("show");
+      wishScreen.setAttribute("aria-hidden", "true");
+
+      finalScreen.classList.add("show");
+      finalScreen.setAttribute("aria-hidden", "false");
+      // đứng yên ở màn cuối, không cần làm gì nữa
+    }
+
+    // ====== EVENTS ======
     heartBtn.addEventListener("click", () => {
       if (started) return;
       started = true;
-
-      // fade transition
       stage.classList.add("fade-out");
+      setTimeout(() => startRain(), 700);
+    });
 
-      // after fade, show rain
-      setTimeout(() => {
-        startRain();
-      }, 700);
+    toLixiBtn.addEventListener("click", () => {
+      if (!started) return;
+      openLixiScreen();
+    });
+
+    continueBtn.addEventListener("click", () => {
+      if (locked === false) locked = true;
+      goFinal();
     });
 
     // ====== Tiny starfield (lightweight) ======
