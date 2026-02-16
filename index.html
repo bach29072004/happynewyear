@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mưa lời khen 14/02</title>
+  <style>
+    :root{
+      --bg:#000;
+      --pink:#ff4da6;
+      --pink2:#ff77c8;
+      --white:#fff;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%; margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;}
+    body{
+      background: var(--bg);
+      overflow:hidden;
+      color: var(--white);
+    }
+
+    /* Center stage */
+    .stage{
+      position:fixed;
+      inset:0;
+      display:grid;
+      place-items:center;
+      background: radial-gradient(1000px 600px at 50% 40%, rgba(255,77,166,.12), transparent 60%),
+                  radial-gradient(900px 500px at 50% 70%, rgba(255,119,200,.08), transparent 60%),
+                  #000;
+      transition: opacity 900ms ease;
+      opacity:1;
+    }
+    .stage.fade-out{ opacity:0; pointer-events:none; }
+
+    /* Heart button */
+    .heart-btn{
+      width:min(220px, 55vw);
+      aspect-ratio: 1 / 1;
+      border:none;
+      background: transparent;
+      cursor:pointer;
+      position:relative;
+      display:grid;
+      place-items:center;
+      transform: translateZ(0);
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .heart{
+      width: 46%;
+      height: 46%;
+      filter: drop-shadow(0 0 14px rgba(255,77,166,.65));
+      animation: pulse 1.25s ease-in-out infinite;
+    }
+    @keyframes pulse{
+      0%,100% { transform: scale(1); }
+      50%     { transform: scale(1.08); }
+    }
+    .hint{
+      position:absolute;
+      top: calc(50% + 120px);
+      width: 100%;
+      text-align:center;
+      font-size: 14px;
+      opacity:.8;
+      letter-spacing:.2px;
+    }
+
+    /* Rain layer */
+    .rain{
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      opacity:0;
+      transition: opacity 900ms ease;
+    }
+    .rain.show{ opacity:1; }
+
+    /* Floating compliment */
+    .drop{
+      position:absolute;
+      top:-10vh;
+      left: 0;
+      white-space: nowrap;
+      font-weight: 700;
+      text-shadow: 0 2px 10px rgba(0,0,0,.65);
+      will-change: transform, opacity;
+      opacity: 0.95;
+      transform: translate3d(var(--x), -20vh, 0) rotate(var(--rot));
+      animation: fall var(--dur) linear forwards;
+      font-size: var(--fs);
+      color: var(--clr);
+      filter: drop-shadow(0 0 10px rgba(255,77,166,.35));
+    }
+    .drop .emoji{
+      margin-left:.35em;
+      opacity:.95;
+    }
+
+    @keyframes fall{
+      0%{
+        transform: translate3d(var(--x), -18vh, 0) rotate(var(--rot));
+        opacity: 0;
+      }
+      6%{ opacity: .95; }
+      100%{
+        transform: translate3d(var(--x), 112vh, 0) rotate(calc(var(--rot) * -1));
+        opacity: 0.05;
+      }
+    }
+
+    /* subtle stars */
+    canvas#stars{
+      position:fixed;
+      inset:0;
+      opacity:.55;
+      mix-blend-mode: screen;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="stars"></canvas>
+
+  <div class="stage" id="stage">
+    <button class="heart-btn" id="heartBtn" aria-label="Bấm để bắt đầu">
+      <!-- SVG heart -->
+      <svg class="heart" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M12 21s-7.2-4.4-9.6-8.7C.6 9.3 2.2 5.8 5.7 5.1c1.8-.4 3.6.3 4.7 1.6 1.1-1.3 2.9-2 4.7-1.6 3.5.7 5.1 4.2 3.3 7.2C19.2 16.6 12 21 12 21z"
+              fill="url(#g)"/>
+        <defs>
+          <linearGradient id="g" x1="3" y1="4" x2="20" y2="22" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#ff4da6"/>
+            <stop offset="1" stop-color="#ff77c8"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <div class="hint">Chạm vào trái tim 💖</div>
+    </button>
+  </div>
+
+  <div class="rain" id="rain"></div>
+
+  <script>
+    // ====== CONFIG ======
+    const COMPLIMENTS = [
+      "Em là điều tuyệt vời nhất",
+      "Em xinh quá trời luôn",
+      "Ở bên em là hạnh phúc",
+      "Cười lên nhìn dễ thương lắm",
+      "Em làm anh nhớ quá",
+      "Em là cả bầu trời của anh",
+      "Anh thương em nhiều lắm",
+      "Em đáng yêu cực kỳ",
+      "Em là người đặc biệt nhất",
+      "Chúc em luôn vui vẻ",
+      "Chúc em luôn hạnh phúc",
+      "Mãi bên anh nhé",
+      "Yêu em nhiều hơn hôm qua",
+      "Em rực rỡ như ánh sao",
+      "Em là số 1 trong lòng anh",
+      "Cảm ơn em vì đã đến",
+      "Em là phép màu của anh",
+      "Hôm nay em đẹp quá",
+      "Em làm mọi thứ trở nên tốt hơn",
+      "Anh yêu em"
+    ];
+    const EMOJIS = ["💖","✨","💗","💕","🌸","🥰","💞","💘","🌟","❤️"];
+    const COLORS = ["#ff4da6","#ff77c8","#ffffff","#ffd1ea","#ffb3dc","#ffe0f1"];
+
+    // spawn rate
+    const START_RATE_MS = 140;   // càng nhỏ càng dày
+    const BURST_COUNT = 18;      // đợt mưa ban đầu
+    const MAX_DROPS = 160;       // giới hạn để máy yếu không lag
+
+    // ====== STATE ======
+    const stage = document.getElementById("stage");
+    const rain = document.getElementById("rain");
+    const heartBtn = document.getElementById("heartBtn");
+
+    let started = false;
+    let timer = null;
+
+    function rand(min, max){ return Math.random() * (max - min) + min; }
+    function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+    function createDrop(){
+      // keep DOM light
+      if (rain.childElementCount > MAX_DROPS) {
+        // remove oldest a bit
+        for (let i = 0; i < 10 && rain.firstChild; i++) rain.removeChild(rain.firstChild);
+      }
+
+      const el = document.createElement("div");
+      el.className = "drop";
+
+      const text = pick(COMPLIMENTS);
+      const emoji = pick(EMOJIS);
+      el.innerHTML = `<span>${text}</span><span class="emoji">${emoji}</span>`;
+
+      const x = rand(0, 100);
+      const dur = rand(5.2, 9.5);
+      const fs = rand(14, 28);
+      const rot = rand(-10, 10);
+      const clr = pick(COLORS);
+
+      el.style.setProperty("--x", x + "vw");
+      el.style.setProperty("--dur", dur + "s");
+      el.style.setProperty("--fs", fs + "px");
+      el.style.setProperty("--rot", rot + "deg");
+      el.style.setProperty("--clr", clr);
+
+      rain.appendChild(el);
+
+      el.addEventListener("animationend", () => {
+        el.remove();
+      });
+    }
+
+    function burst(n=12){
+      for (let i=0;i<n;i++){
+        setTimeout(createDrop, i*35);
+      }
+    }
+
+    function startRain(){
+      rain.classList.add("show");
+      burst(BURST_COUNT);
+      timer = setInterval(createDrop, START_RATE_MS);
+    }
+
+    heartBtn.addEventListener("click", () => {
+      if (started) return;
+      started = true;
+
+      // fade transition
+      stage.classList.add("fade-out");
+
+      // after fade, show rain
+      setTimeout(() => {
+        startRain();
+      }, 700);
+    });
+
+    // ====== Tiny starfield (lightweight) ======
+    const canvas = document.getElementById("stars");
+    const ctx = canvas.getContext("2d");
+    let W, H, stars;
+
+    function resize(){
+      W = canvas.width = window.innerWidth * devicePixelRatio;
+      H = canvas.height = window.innerHeight * devicePixelRatio;
+      canvas.style.width = window.innerWidth + "px";
+      canvas.style.height = window.innerHeight + "px";
+      stars = Array.from({length: 120}, () => ({
+        x: Math.random()*W,
+        y: Math.random()*H,
+        r: Math.random()*1.6 + 0.2,
+        a: Math.random()*0.8 + 0.2,
+        tw: Math.random()*0.015 + 0.004
+      }));
+    }
+
+    function drawStars(){
+      ctx.clearRect(0,0,W,H);
+      for (const s of stars){
+        s.a += (Math.random() > 0.5 ? 1 : -1) * s.tw;
+        s.a = Math.max(0.12, Math.min(0.95, s.a));
+        ctx.globalAlpha = s.a;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+        ctx.fillStyle = "#fff";
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      requestAnimationFrame(drawStars);
+    }
+
+    window.addEventListener("resize", resize);
+    resize();
+    drawStars();
+  </script>
+</body>
+</html>
