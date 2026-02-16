@@ -511,6 +511,12 @@
         aspect-ratio: 1/1;
         filter: drop-shadow(0 0 26px rgba(255, 77, 166, 0.45));
       }
+      .photo-heart {
+        width: min(360px, 78vw);
+        aspect-ratio: 1/1;
+        filter: drop-shadow(0 0 22px rgba(255, 77, 166, 0.35))
+          drop-shadow(0 0 55px rgba(255, 119, 200, 0.22));
+      }
 
       /* reduce motion */
       @media (prefers-reduced-motion: reduce) {
@@ -521,10 +527,95 @@
           animation-duration: 6s !important;
         }
       }
+      /* ===== Final text animation ===== */
+      .final-text {
+        animation:
+          titlePop 900ms cubic-bezier(0.2, 0.9, 0.2, 1) both,
+          titleGlow 1600ms ease-in-out 0.2s infinite alternate;
+      }
+
+      @keyframes titlePop {
+        0% {
+          opacity: 0;
+          transform: translateY(10px) scale(0.96);
+          filter: blur(2px);
+        }
+        70% {
+          opacity: 1;
+          transform: translateY(0) scale(1.02);
+          filter: blur(0);
+        }
+        100% {
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      @keyframes titleGlow {
+        from {
+          text-shadow:
+            0 0 10px rgba(255, 77, 166, 0.18),
+            0 0 22px rgba(255, 119, 200, 0.12);
+        }
+        to {
+          text-shadow:
+            0 0 14px rgba(255, 77, 166, 0.32),
+            0 0 34px rgba(255, 119, 200, 0.22);
+        }
+      }
+
+      /* ===== Heart rain background (behind content) ===== */
+      .heart-rain {
+        position: fixed;
+        inset: 0;
+        z-index: 2; /* dưới stars(3) hay trên? bạn muốn sau nền -> để 2 */
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 600ms ease;
+      }
+      .heart-rain.show {
+        opacity: 1;
+      }
+
+      .heart-drop {
+        position: absolute;
+        top: -12vh;
+        left: 0;
+        will-change: transform, opacity;
+        transform: translate3d(var(--x), -20vh, 0) rotate(var(--rot));
+        animation: heartFall var(--dur) linear forwards;
+        opacity: 0.95;
+        filter: drop-shadow(0 0 14px rgba(255, 77, 166, 0.45));
+      }
+
+      .heart-drop svg {
+        width: var(--sz);
+        height: var(--sz);
+        display: block;
+      }
+
+      @keyframes heartFall {
+        0% {
+          transform: translate3d(var(--x), -18vh, 0) rotate(var(--rot));
+          opacity: 0;
+        }
+        8% {
+          opacity: 0.95;
+        }
+        100% {
+          transform: translate3d(var(--x), 112vh, 0)
+            rotate(calc(var(--rot) * -1));
+          opacity: 0.05;
+        }
+      }
+
+      /* nếu bạn muốn heart-rain nằm TRÊN stars thì đổi z-index = 3.5 (không có), 
+   nên: set canvas#stars z-index:1; và heart-rain z-index:2 */
     </style>
   </head>
   <body>
     <canvas id="stars"></canvas>
+
+    <div class="heart-rain" id="heartRain"></div>
 
     <div class="stage" id="stage">
       <button class="heart-btn" id="heartBtn" aria-label="Bấm để bắt đầu">
@@ -589,32 +680,53 @@
     </div>
 
     <!-- Final screen -->
+    <!-- Final screen -->
     <div class="final-screen" id="finalScreen" aria-hidden="true">
       <div class="final-wrap">
         <div class="final-text">Cảm ơn em — Yêu em ❤️</div>
+
+        <!-- HEART PHOTO (SVG MASK - works everywhere) -->
         <svg
-          class="big-heart"
+          class="photo-heart"
           viewBox="0 0 24 24"
-          fill="none"
-          aria-hidden="true"
+          aria-label="Ảnh trong khung trái tim"
         >
+          <defs>
+            <clipPath id="heartClip">
+              <path
+                d="M12 21s-7.2-4.4-9.6-8.7C.6 9.3 2.2 5.8 5.7 5.1c1.8-.4 3.6.3 4.7 1.6 1.1-1.3 2.9-2 4.7-1.6 3.5.7 5.1 4.2 3.3 7.2C19.2 16.6 12 21 12 21z"
+              />
+            </clipPath>
+
+            <!-- glow -->
+            <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="0.6" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          <!-- ảnh -->
+          <image
+            href="anhdoi.jpg"
+            x="0"
+            y="0"
+            width="24"
+            height="24"
+            preserveAspectRatio="xMidYMid slice"
+            clip-path="url(#heartClip)"
+          ></image>
+
+          <!-- viền -->
           <path
             d="M12 21s-7.2-4.4-9.6-8.7C.6 9.3 2.2 5.8 5.7 5.1c1.8-.4 3.6.3 4.7 1.6 1.1-1.3 2.9-2 4.7-1.6 3.5.7 5.1 4.2 3.3 7.2C19.2 16.6 12 21 12 21z"
-            fill="url(#gg)"
+            fill="none"
+            stroke="rgba(255,255,255,0.35)"
+            stroke-width="0.7"
+            filter="url(#glow)"
           />
-          <defs>
-            <linearGradient
-              id="gg"
-              x1="3"
-              y1="4"
-              x2="20"
-              y2="22"
-              gradientUnits="userSpaceOnUse"
-            >
-              <stop stop-color="#ff4da6" />
-              <stop offset="1" stop-color="#ff77c8" />
-            </linearGradient>
-          </defs>
         </svg>
       </div>
     </div>
@@ -894,6 +1006,7 @@
         finalScreen.classList.add("show");
         finalScreen.setAttribute("aria-hidden", "false");
         // đứng yên ở màn cuối, không cần làm gì nữa
+        startHeartRain();
       }
 
       // ====== EVENTS ======
@@ -935,7 +1048,7 @@
         stars = Array.from({ length: count }, () => ({
           x: Math.random() * W,
           y: Math.random() * H,
-          r: Math.random() * 3.2 + 0.8,  
+          r: Math.random() * 3.2 + 0.8,
           a: Math.random() * 0.9 + 0.1,
           tw: Math.random() * 0.035 + 0.012,
           flash: Math.random() < 0.04, // một số sao “nháy” mạnh
@@ -973,6 +1086,66 @@
       window.addEventListener("resize", resize);
       resize();
       drawStars();
+      // ====== Heart rain layer ======
+      const heartRain = document.getElementById("heartRain");
+      let heartTimer = null;
+
+      function createHeart() {
+        if (!heartRain) return;
+
+        // giới hạn để không lag
+        if (heartRain.childElementCount > 120) {
+          for (let i = 0; i < 10 && heartRain.firstChild; i++) {
+            heartRain.removeChild(heartRain.firstChild);
+          }
+        }
+
+        const el = document.createElement("div");
+        el.className = "heart-drop";
+
+        // trái tim svg nhỏ
+        el.innerHTML = `
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M12 21s-7.2-4.4-9.6-8.7C.6 9.3 2.2 5.8 5.7 5.1c1.8-.4 3.6.3 4.7 1.6 1.1-1.3 2.9-2 4.7-1.6 3.5.7 5.1 4.2 3.3 7.2C19.2 16.6 12 21 12 21z"
+        fill="rgba(255,77,166,0.85)"/>
+    </svg>
+  `;
+
+        const x = rand(0, window.innerWidth); // px
+        const dur = rand(5.0, 9.0);
+        const rot = rand(-12, 12);
+        const isPhone = window.matchMedia("(max-width: 520px)").matches;
+        const sz = isPhone ? rand(10, 18) : rand(12, 26);
+
+        el.style.setProperty("--dur", dur + "s");
+        el.style.setProperty("--rot", rot + "deg");
+        el.style.setProperty("--sz", sz + "px");
+
+        heartRain.appendChild(el);
+
+        // căn giữa theo width thật
+        const w = el.offsetWidth || sz;
+        el.style.setProperty("--x", x - w / 2 + "px");
+
+        el.addEventListener("animationend", () => el.remove());
+      }
+
+      function startHeartRain() {
+        heartRain.classList.add("show");
+        // burst
+        for (let i = 0; i < 18; i++) setTimeout(createHeart, i * 40);
+        heartTimer = setInterval(createHeart, 160);
+      }
+
+      function stopHeartRain() {
+        heartRain.classList.remove("show");
+        if (heartTimer) {
+          clearInterval(heartTimer);
+          heartTimer = null;
+        }
+        // dọn bớt cho nhẹ
+        heartRain.innerHTML = "";
+      }
     </script>
   </body>
 </html>
